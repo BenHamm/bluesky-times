@@ -1,18 +1,42 @@
 """
 Configuration for Bluesky Times
+
+Set these environment variables or create a .env file:
+- BLUESKY_HANDLE: Your Bluesky handle (e.g., user.bsky.social)
+- BLUESKY_APP_PASSWORD: App password from Bluesky settings
+- OPENROUTER_API_KEY: API key from openrouter.ai
 """
 import os
+import sys
+
+# Load .env file if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed, use environment variables directly
 
 # LLM Configuration (via OpenRouter)
-OPENROUTER_API_KEY = os.environ.get(
-    "OPENROUTER_API_KEY",
-    "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"
-)
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 DEFAULT_MODEL = "anthropic/claude-sonnet-4.5"
 
 # Bluesky credentials (from environment)
 BLUESKY_HANDLE = os.environ.get("BLUESKY_HANDLE", "")
-BLUESKY_APP_PASSWORD = os.environ.get("BLUESKY_APP_PASSWORD", "vmh6-2owg-yhql-lkr2")
+BLUESKY_APP_PASSWORD = os.environ.get("BLUESKY_APP_PASSWORD")
+
+def validate_config():
+    """Check that required environment variables are set"""
+    missing = []
+    if not OPENROUTER_API_KEY:
+        missing.append("OPENROUTER_API_KEY")
+    if not BLUESKY_APP_PASSWORD:
+        missing.append("BLUESKY_APP_PASSWORD")
+    
+    if missing:
+        print(f"❌ Missing required environment variables: {', '.join(missing)}")
+        print("   Set them in your environment or create a .env file.")
+        print("   See env.example for a template.")
+        sys.exit(1)
 
 # Favorite accounts - prioritized voices
 # These appear first in themed sections and get dedicated "From Voices I Follow" section

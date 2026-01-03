@@ -11,6 +11,8 @@ from .config import (
     BLUESKY_HANDLE,
     BLUESKY_APP_PASSWORD,
     DEFAULT_MODEL,
+    OPENROUTER_API_KEY,
+    validate_config,
 )
 from .generator import BlueskyTimesGenerator
 
@@ -57,6 +59,11 @@ Examples:
     )
     
     args = parser.parse_args()
+    
+    # Validate required environment variables
+    # Need Bluesky creds for fresh fetch, OpenRouter for themes
+    if not args.cache or not args.no_themes:
+        validate_config()
     
     # Get credentials from args or environment
     handle = args.handle or BLUESKY_HANDLE

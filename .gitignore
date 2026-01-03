@@ -1,0 +1,38 @@
+# Backup of original monolithic code (kept for reverting)
+_backup/
+
+# Generated outputs
+*.pdf
+*.html
+cache.json
+pdf_pages/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Environment and secrets
+.env
+*.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+

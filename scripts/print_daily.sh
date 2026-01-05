@@ -1,37 +1,45 @@
 #!/bin/bash
-# Bluesky Times - Daily Print Script
-# 
-# Usage: ./scripts/print_daily.sh [handle]
-# Add to crontab: 0 7 * * * /path/to/bluesky-times/scripts/print_daily.sh
+# Print the daily Bluesky Times
+# Cross-platform compatible (macOS + Linux)
 
 set -e
 
-# Navigate to project root
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
 cd "$PROJECT_DIR"
 
-# Activate venv and set library path for WeasyPrint
-source venv/bin/activate
-export DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix)/lib"
+# Activate virtual environment
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+elif [ -f ".venv/bin/activate" ]; then
+    source .venv/bin/activate
+fi
 
-# Use provided handle or default
-HANDLE="${1:-${BLUESKY_HANDLE:-benergetic.bsky.social}}"
+# macOS needs this for WeasyPrint
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix)/lib"
+fi
 
-echo "📰 Generating The Bluesky Times for @${HANDLE}..."
+# Generate PDF
+echo "Generating Bluesky Times..."
+python -m bluesky_times.cli "${1:-benergetic.bsky.social}" -o /tmp/bluesky_times_today.pdf
 
-# Generate today's edition
-python -m bluesky_times.cli "$HANDLE"
+# Print using available command
+PDF_FILE="/tmp/bluesky_times_today.pdf"
 
-# Get today's PDF filename
-PDF_FILE="bluesky_times_$(date +%Y-%m-%d).pdf"
-
-# Print if file exists
-if [ -f "$PDF_FILE" ]; then
-    echo "🖨️  Sending to printer..."
+if command -v lpr &> /dev/null; then
+    # macOS and some Linux distros
     lpr -o sides=two-sided-long-edge "$PDF_FILE"
-    echo "✅ Sent to printer: $PDF_FILE"
+    echo "Sent to printer via lpr"
+elif command -v lp &> /dev/null; then
+    # Ubuntu and other Linux distros
+    lp -o sides=two-sided-long-edge "$PDF_FILE"
+    echo "Sent to printer via lp"
 else
-    echo "❌ PDF not found: $PDF_FILE"
+    echo "ERROR: No print command found (lpr or lp)"
+    echo "PDF saved to: $PDF_FILE"
     exit 1
 fi
+
+echo "Done!"

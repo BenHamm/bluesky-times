@@ -1,0 +1,11 @@
+# Requirements for Python 3.8 environments (e.g., Ubuntu 20.04, Jetson)
+# Use this instead of requirements.txt if on Python < 3.9
+
+atproto>=0.0.55
+weasyprint>=60.0,<62.0
+pydyf<0.10.0
+python-dateutil>=2.8.2
+Jinja2>=3.1.2
+httpx>=0.25.0
+openai>=1.0.0
+python-dotenv>=1.0.0

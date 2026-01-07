@@ -6,6 +6,14 @@ _backup/
 *.html
 cache.json
 pdf_pages/
+arson_pages/
+bt_pages/
+
+# Debug images
+*.jpg
+*.png
+debug_*.png
+bluesky_feed_reference.png
 
 # Python
 __pycache__/

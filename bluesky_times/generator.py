@@ -584,6 +584,31 @@ Write a brief, neutral summary (no "This thread discusses..." - just state what'
         
         print(f"   Added context to {context_added} favorite threads")
     
+    def add_basic_reply_context(self, threads: list):
+        """Add basic context (immediate parent) for ALL reply posts that don't have context yet"""
+        print("💬 Adding basic reply context...")
+        context_added = 0
+        
+        for thread in threads:
+            for post in thread['posts']:
+                # Skip if already has context or not a reply
+                if post.get('reply_context') or not post.get('reply_parent'):
+                    continue
+                
+                # Fetch the immediate parent
+                try:
+                    parent_data = self.fetch_single_post(post['reply_parent'])
+                    if parent_data:
+                        post['reply_context'] = {
+                            'type': 'full',
+                            'posts': [parent_data]
+                        }
+                        context_added += 1
+                except:
+                    pass  # Skip if we can't fetch
+        
+        print(f"   Added basic context to {context_added} replies")
+    
     def format_time(self, iso_time: str) -> str:
         """Format ISO time to readable format in PST"""
         if not iso_time:
@@ -1170,7 +1195,9 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
             font-family: 'Inter', sans-serif;
             font-size: 6.5pt;
             color: #888;
-            margin-left: auto;
+            text-align: right;
+            margin-top: 0.03in;
+            display: block;
         }
         
         .post-text {
@@ -1420,7 +1447,6 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                         <div class="post-header">
                             <span class="author-name">{{ post.author_name }}</span>
                             <span class="author-handle">@{{ post.author_handle }}</span>
-                            <span class="post-time">{{ post.formatted_time }}</span>
                         </div>
                         <div class="post-text">{{ post.text }}</div>
                         {% if post.images %}
@@ -1448,6 +1474,7 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                                 {% endif %}
                             </div>
                         {% endif %}
+                        <div class="post-time">{{ post.formatted_time }}</div>
                     </div>
                     {% if not loop.last %}
                         <div class="thread-connector">↓</div>
@@ -1463,7 +1490,6 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                 <div class="post-header">
                     <span class="author-name">{{ post.author_name }}</span>
                     <span class="author-handle">@{{ post.author_handle }}</span>
-                    <span class="post-time">{{ post.formatted_time }}</span>
                 </div>
                 <div class="post-text">{{ post.text }}</div>
                 {% if post.images %}
@@ -1496,6 +1522,7 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                         {% if post.reply_count %}<span>💬 {{ post.reply_count }}</span>{% endif %}
                     </div>
                 {% endif %}
+                <div class="post-time">{{ post.formatted_time }}</div>
             </div>
         {% endif %}
     {% endfor %}
@@ -1699,7 +1726,9 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
             font-family: 'Inter', sans-serif;
             font-size: 6.5pt;
             color: #888;
-            margin-left: auto;
+            text-align: right;
+            margin-top: 0.03in;
+            display: block;
         }
         
         .post-text {
@@ -1982,7 +2011,6 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                             <div class="post-header">
                                 <span class="author-name{% if is_fav %} favorite{% endif %}">{{ post.author_name }}</span>
                                 <span class="author-handle">@{{ post.author_handle }}</span>
-                                <span class="post-time">{{ post.formatted_time }}</span>
                             </div>
                             <div class="post-text">{{ post.text }}</div>
                             {% if post.images %}
@@ -2017,6 +2045,7 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                                     {% endif %}
                                 </div>
                             {% endif %}
+                            <div class="post-time">{{ post.formatted_time }}</div>
                         </div>
                     {% endfor %}
                 </div>
@@ -2065,7 +2094,6 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                     <div class="post-header">
                         <span class="author-name{% if is_fav %} favorite{% endif %}">{{ post.author_name }}</span>
                         <span class="author-handle">@{{ post.author_handle }}</span>
-                        <span class="post-time">{{ post.formatted_time }}</span>
                     </div>
                     <div class="post-text">{{ post.text }}</div>
                     {% if post.images %}
@@ -2098,6 +2126,7 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                             {% if post.reply_count %}<span>💬 {{ post.reply_count }}</span>{% endif %}
                         </div>
                     {% endif %}
+                    <div class="post-time">{{ post.formatted_time }}</div>
                     {% if post.thread_replies %}
                         {% for reply in post.thread_replies %}
                             {% if reply.immediate_parent %}
@@ -2111,9 +2140,9 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
                                 <div class="post-header">
                                     <span class="author-name favorite">★ {{ reply.author_name }}</span>
                                     <span class="author-handle">@{{ reply.author_handle }}</span>
-                                    <span class="post-time">{{ reply.formatted_time or '' }}</span>
                                 </div>
                                 <div class="post-text">{{ reply.text }}</div>
+                                <div class="post-time">{{ reply.formatted_time or '' }}</div>
                             </div>
                         {% endfor %}
                     {% endif %}
@@ -2175,6 +2204,9 @@ Return JSON object like {{"index": "theme-id-or-misc"}}"""
             
             # Add context to threads with favorites (for multi-person conversations)
             self.add_thread_context_for_favorites(threads)
+            
+            # Add basic context for ALL reply posts
+            self.add_basic_reply_context(threads)
             
             print("🖼️  Downloading images...")
             image_count = self.download_images_for_threads(threads)
